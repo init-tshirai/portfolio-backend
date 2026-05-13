@@ -315,12 +315,12 @@ Devise.setup do |config|
 
     # JWTを発行するリクエストを指定する。
     jwt.dispatch_requests = [
-      ['POST', %r{^/api/v1/auth/sign_in$}],
+      [ "POST", %r{^/api/v1/auth/sign_in$} ]
     ]
 
     # JWTを無効化するリクエストを指定する。
     jwt.revocation_requests = [
-      ['DELETE', %r{^/api/v1/auth/sign_out$}],
+      [ "DELETE", %r{^/api/v1/auth/sign_out$} ]
     ]
 
     # JWTの有効期限を指定する。
