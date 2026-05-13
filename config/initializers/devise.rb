@@ -257,16 +257,11 @@ Devise.setup do |config|
   # only the current scope. By default, Devise signs out all scopes.
   # config.sign_out_all_scopes = true
 
-  # ==> Navigation configuration
-  # Lists the formats that should be treated as navigational. Formats like
-  # :html should redirect to the sign in page when the user does not have
-  # access, but formats like :xml or :json, should return 401.
-  #
-  # If you have any extra navigational formats, like :iphone or :mobile, you
-  # should add them to the navigational formats lists.
-  #
-  # The "*/*" below is required to match Internet Explorer requests.
+  # navigation formatの指定。
+  # 通常のRailsアプリケーションは、ログインしていない状態でhtmlアクセスがあった場合、サインインページに遷移するために、以下のように指定する。
   # config.navigational_formats = ['*/*', :html, :turbo_stream]
+  # 今回はRails APIであり、htmlやturbo_streamは不要のため、空の配列を指定する。
+  config.navigational_formats = []
 
   # The default HTTP method used to sign out a resource. Default is :delete.
   config.sign_out_via = :delete
