@@ -52,6 +52,8 @@ class Api::V1::TasksController < ApplicationController
 
   private
 
+  # todo: fat controllerになっているかもしれない。サービスクラスへの移譲を検討する。
+
   def task_json(task)
     {
       id: task.id,
