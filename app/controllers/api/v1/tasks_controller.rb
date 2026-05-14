@@ -27,12 +27,19 @@ class Api::V1::TasksController < ApplicationController
     render(json: task_json(task), status: :created)
   end
 
+  def show
+    task = Task.find(params[:id])
+
+    render(json: task_json(task))
+  end
+
   private
 
   def task_json(task)
     {
       id: task.id,
       title: task.title,
+      description: task.description,
       status: task.status,
       due_date: task.due_date&.strftime("%Y-%m-%d"),
       user: {
