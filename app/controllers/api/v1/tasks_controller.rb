@@ -50,6 +50,12 @@ class Api::V1::TasksController < ApplicationController
     render(json: task_json(Task.preload(:user, {comments: :user}).find(task.id)))
   end
 
+  def destroy
+    task = Task.find(params[:id])
+    task.destroy!
+    render(json: { message: "Task deleted successfully" }, status: :ok)
+  end
+
   private
 
   # todo: fat controllerになっているかもしれない。サービスクラスへの移譲を検討する。
