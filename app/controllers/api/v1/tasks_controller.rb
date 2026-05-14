@@ -16,21 +16,35 @@ class Api::V1::TasksController < ApplicationController
 
     render(
       json: tasks.map { |task|
-        {
-          id: task.id,
-          title: task.title,
-          status: task.status,
-          due_date: task.due_date&.strftime("%Y-%m-%d"),
-          user: {
-            id: task.user.id,
-            name: task.user.name
-          }
-        }
+        task_json(task)
       }
     )
   end
 
+  def create
+    task = Task.create!(task_params)
+
+    render(json: task_json(task), status: :created)
+  end
+
   private
+
+  def task_json(task)
+    {
+      id: task.id,
+      title: task.title,
+      status: task.status,
+      due_date: task.due_date&.strftime("%Y-%m-%d"),
+      user: {
+        id: task.user.id,
+        name: task.user.name
+      }
+    }
+  end
+
+  def task_params
+    params.require(:task).permit(:title, :description, :status, :due_date, :user_id)
+  end
 
   def set_pagination_headers(total_count, current_page, current_limit)
     response.set_header("X-Total-Count", total_count)

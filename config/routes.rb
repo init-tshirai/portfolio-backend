@@ -2,7 +2,7 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       get "profile", to: "profile#show"
-      resources :tasks, only: [:index]
+      resources :tasks, only: [:index, :create]
       resources :users, only: [:index]
     end
   end
