@@ -4,7 +4,7 @@ class Api::V1::TasksController < ApplicationController
   def index
     # todo: 検索機能実装 （users.nameで検索できるよう、eager_loadに変更する。）
     # todo: ページネーション実装
-    tasks = Task.preload(:user).order(:id)
+    tasks = Task.preload(:user).order(due_date: :desc)
 
     render(
       json: tasks.map { |task|
@@ -12,7 +12,7 @@ class Api::V1::TasksController < ApplicationController
           id: task.id,
           title: task.title,
           status: task.status,
-          user_id: task.user_id,
+          due_date: task.due_date.strftime("%Y-%m-%d"),
           user: {
             name: task.user.name
           }
