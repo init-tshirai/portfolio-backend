@@ -1,9 +1,18 @@
 class Api::V1::TasksController < ApplicationController
+  DEFAULT_PAGE = 1
+  DEFAULT_LIMIT = 20
+  MAX_LIMIT = 100
+
   before_action :authenticate_user!
 
   def index
-    # todo: ページネーション実装
     tasks = search_tasks(Task.preload(:user).order(due_date: :desc))
+    total_count = tasks.count
+    current_page = page_param
+    current_limit = limit_param
+
+    set_pagination_headers(total_count, current_page, current_limit)
+    tasks = tasks.offset((current_page - 1) * current_limit).limit(current_limit)
 
     render(
       json: tasks.map { |task|
@@ -22,6 +31,30 @@ class Api::V1::TasksController < ApplicationController
   end
 
   private
+
+  def set_pagination_headers(total_count, current_page, current_limit)
+    response.set_header("X-Total-Count", total_count)
+    response.set_header("X-Current-Page", current_page)
+    response.set_header("X-Per-Page", current_limit)
+    response.set_header("X-Total-Pages", (total_count.to_f / current_limit).ceil)
+  end
+
+  def page_param
+    positive_integer_param(:page, DEFAULT_PAGE)
+  end
+
+  def limit_param
+    [ positive_integer_param(:limit, DEFAULT_LIMIT), MAX_LIMIT ].min
+  end
+
+  def positive_integer_param(param_name, default_value)
+    return default_value if params[param_name].blank?
+
+    value = Integer(params[param_name], exception: false)
+    return value if value&.positive?
+
+    raise ActionController::BadRequest, "Invalid #{param_name}: #{params[param_name]}"
+  end
 
   def search_tasks(tasks)
     tasks = tasks.where("title LIKE ?", "%#{Task.sanitize_sql_like(params[:title])}%") if params[:title].present?
