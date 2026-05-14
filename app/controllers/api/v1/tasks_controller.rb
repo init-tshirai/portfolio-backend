@@ -28,7 +28,7 @@ class Api::V1::TasksController < ApplicationController
   end
 
   def show
-    task = Task.find(params[:id])
+    task = Task.preload(:user, {comments: :user}).find(params[:id])
 
     render(json: task_json(task))
   end
@@ -45,6 +45,17 @@ class Api::V1::TasksController < ApplicationController
       user: {
         id: task.user.id,
         name: task.user.name
+      },
+      comments: task.comments.map { |comment|
+        {
+          id: comment.id,
+          content: comment.content,
+          task_update_info: comment.task_update_info,
+          user: {
+            id: comment.user.id,
+            name: comment.user.name
+          }
+        }
       }
     }
   end
