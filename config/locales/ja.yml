@@ -1,0 +1,26 @@
+ja:
+  activerecord:
+    attributes:
+      task:
+        status: ステータス
+        user: 担当者
+        user_id: 担当者
+      comment:
+        content: コメント
+        task_update_info: 更新内容
+    errors:
+      models:
+        task:
+          attributes:
+            status:
+              blank: を入力してください
+              inclusion: は不正な値です
+            user:
+              required: は存在しません。
+            user_id:
+              blank: を入力してください
+        comment:
+          attributes:
+            content:
+              blank: を入力してください
+              too_long: は%{count}文字以内で入力してください
