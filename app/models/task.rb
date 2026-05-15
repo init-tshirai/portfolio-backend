@@ -1,7 +1,10 @@
 class Task < ApplicationRecord
   belongs_to :user
   has_many :comments, dependent: :destroy
-  enum :status, { not_started: 0, in_progress: 1, resolved: 2, completed: 3, feedback: 4, rejected: 5 }
+  enum :status, { not_started: 0, in_progress: 1, resolved: 2, completed: 3, feedback: 4, rejected: 5 }, validate: true
 
-  # todo: validation実装
+  validates :title, presence: true, length: { maximum: 255 }
+  validates :description, length: { maximum: 10000 }
+  validates :status, presence: true # 値の検証は enum 宣言の「validate: true」オプションで行われる
+  validates :user_id, presence: true # 整合性（userが存在するか？）は外部キー制約に任せる
 end

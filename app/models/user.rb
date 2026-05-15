@@ -1,7 +1,10 @@
 class User < ApplicationRecord
   include Devise::JWT::RevocationStrategies::JTIMatcher
 
-  enum :role, { normal: 0, admin: 1 }
+  has_many :tasks, dependent: :restrict_with_exception
+  has_many :comments, dependent: :restrict_with_exception
+
+  enum :role, { normal: 0, admin: 1 }, validate: true
 
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
