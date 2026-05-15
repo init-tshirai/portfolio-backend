@@ -46,6 +46,8 @@ class Api::V1::TasksController < ApplicationController
         user: current_user
       )
     end
+    rescue ActiveRecord::RecordInvalid => e
+      render(json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity) and return
 
     render(json: task_json(Task.preload(:user, { comments: :user }).find(task.id)))
   end
