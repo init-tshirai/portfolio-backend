@@ -18,4 +18,24 @@ class Task < ApplicationRecord
 
     changes.presence&.join(", ") || "コメントしました"
   end
+
+  scope :search_by_title, ->(title) {
+    where("title LIKE ?", "%#{Task.sanitize_sql_like(title)}%") if title.present?
+  }
+
+  scope :search_by_status, ->(status) {
+    where(status: status) if status.present?
+  }
+
+  scope :search_by_due_date_from, ->(due_date_from) {
+    where("due_date >= ?", due_date_from.beginning_of_day) if due_date_from.present?
+  }
+
+  scope :search_by_due_date_to, ->(due_date_to) {
+    where("due_date <= ?", due_date_to.end_of_day) if due_date_to.present?
+  }
+
+  scope :search_by_user_id, ->(user_id) {
+    where(user_id: user_id) if user_id.present?
+  }
 end

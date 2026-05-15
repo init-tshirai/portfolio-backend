@@ -6,7 +6,13 @@ class Api::V1::TasksController < ApplicationController
   before_action :authenticate_user!
 
   def index
-    tasks = search_tasks(Task.preload(:user).order(due_date: :desc))
+    tasks = Task.preload(:user).order(due_date: :desc)
+     .search_by_title(params[:title])
+     .search_by_status(params[:status])
+     .search_by_due_date_from(due_date_from)
+     .search_by_due_date_to(due_date_to)
+     .search_by_user_id(params[:user_id])
+
     total_count = tasks.count
     current_page = page_param
     current_limit = limit_param
@@ -136,30 +142,15 @@ class Api::V1::TasksController < ApplicationController
     raise ActionController::BadRequest, "Invalid #{param_name}: #{params[param_name]}"
   end
 
-  def search_tasks(tasks)
-    tasks = tasks.where("title LIKE ?", "%#{Task.sanitize_sql_like(params[:title])}%") if params[:title].present?
-    tasks = tasks.where(status: status_param) if params[:status].present?
-    tasks = tasks.where("due_date >= ?", due_date_from.beginning_of_day) if params[:due_date_from].present?
-    tasks = tasks.where("due_date <= ?", due_date_to.end_of_day) if params[:due_date_to].present?
-    tasks = tasks.where(user_id: params[:user_id]) if params[:user_id].present?
-
-    tasks
-  end
-
-  def status_param
-    status = params[:status]
-    return status if Task.statuses.key?(status)
-
-    raise ActionController::BadRequest, "Invalid status: #{status}"
-  end
-
   def due_date_from
+    return nil if params[:due_date_from].blank?
     Date.iso8601(params[:due_date_from])
   rescue Date::Error
     raise ActionController::BadRequest, "Invalid due_date_from: #{params[:due_date_from]}"
   end
 
   def due_date_to
+    return nil if params[:due_date_to].blank?
     Date.iso8601(params[:due_date_to])
   rescue Date::Error
     raise ActionController::BadRequest, "Invalid due_date_to: #{params[:due_date_to]}"
