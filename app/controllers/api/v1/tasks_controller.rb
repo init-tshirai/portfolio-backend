@@ -1,9 +1,16 @@
 class Api::V1::TasksController < ApplicationController
+  load_and_authorize_resource
+
   DEFAULT_PAGE = 1
   DEFAULT_LIMIT = 20
   MAX_LIMIT = 100
 
-  before_action :authenticate_user!
+  # before_action :authenticate_user!
+  # 認証は load_and_authorize_resource で行う
+
+  rescue_from CanCan::AccessDenied do |exception|
+    render(json: { error: "アクセス権限がありません。" }, status: :forbidden)
+  end
 
   def index
     tasks = Task.preload(:user).order(due_date: :desc)
