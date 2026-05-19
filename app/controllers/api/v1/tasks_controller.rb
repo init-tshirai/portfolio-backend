@@ -8,6 +8,10 @@ class Api::V1::TasksController < ApplicationController
   # before_action :authenticate_user!
   # 認証は load_and_authorize_resource で行う
 
+  rescue_from CanCan::AccessDenied do |exception|
+    render(json: { error: "アクセス権限がありません。" }, status: :forbidden)
+  end
+
   def index
     tasks = Task.preload(:user).order(due_date: :desc)
      .search_by_title(params[:title])
