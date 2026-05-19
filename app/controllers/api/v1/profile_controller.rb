@@ -12,7 +12,7 @@ class Api::V1::ProfileController < ApplicationController
             read: can?(:read, Task),
             create: can?(:create, Task),
             update: can?(:update, Task),
-            destroy: can?(:destroy, Task),
+            destroy: can?(:destroy, Task)
           }
         }
       }
