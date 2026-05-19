@@ -52,3 +52,6 @@ end
 # 認証
 gem "devise"
 gem "devise-jwt"
+
+# 認可
+gem "cancancan"
