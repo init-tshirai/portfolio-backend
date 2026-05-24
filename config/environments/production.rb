@@ -29,11 +29,16 @@ Rails.application.configure do
   # solid_queue が使用するDBを指定。今回はdbではなく async を利用するためコメントアウト。
   # config.solid_queue.connects_to = { database: { writing: :queue } }
 
-  config.action_mailer.default_url_options = { host: "example.com" }
+  # メール送信機能無し。
+  # config.action_mailer.default_url_options = { host: "example.com" }
 
   config.i18n.fallbacks = true
 
   config.active_record.dump_schema_after_migration = false
 
   config.active_record.attributes_for_inspect = [ :id ]
+
+  config.assume_ssl = true
+  config.force_ssl = true
+  # config.hosts << ENV.fetch("RENDER_EXTERNAL_HOSTNAME")
 end
