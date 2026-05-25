@@ -73,10 +73,10 @@ flowchart LR
 
 ### 認証・認可の流れ
 
-1. ユーザーがフロントの `/login` からログインする
-2. フロント（Next.js） が `POST /auth/sign_in` を呼び、JWT を **httpOnly Cookie** に保存する
-3. 以降は Cookie からトークンを取り出し、`Authorization: Bearer <token>` 付きで API を呼ぶ
-4. API 側は **Devise JWT** で認証、**CanCanCan** で認可する
+1. ユーザーがフロントの /login からログインする
+2. フロントがPOSTで /auth/sign_in を呼び、JWTをCookieに保存する
+3. 以降はCookieからトークンを取り出し、 Authorization: Bearer <token> 付きでAPIを呼ぶ
+4. API側はDevise JWTで認証、CanCanCanで認可する
 
 ---
 
