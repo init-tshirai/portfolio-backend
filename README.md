@@ -6,6 +6,7 @@
 [フロントエンド（Next.js）](https://github.com/init-tshirai/portfolio-frontend) と組み合わせて利用します。
 
 URL: https://portfolio-frontend-self-psi.vercel.app/ <br>
+ログイン情報<br>
 メールアドレス: `normal@example.com` <br>
 パスワード: `faipheiz4ieY`
 
@@ -16,19 +17,11 @@ URL: https://portfolio-frontend-self-psi.vercel.app/ <br>
 - [タスク管理アプリ（バックエンド）](#タスク管理アプリバックエンド)
   - [概要](#概要)
   - [目次](#目次)
-    - [使用技術](#使用技術)
-  - [アーキテクチャ](#アーキテクチャ)
-    - [認証・認可の流れ](#認証認可の流れ)
+  - [使用技術](#使用技術)
+  - [インフラ構成](#インフラ構成)
+  - [認証・認可について](#認証認可について)
   - [ER 図](#er-図)
-    - [ロールと権限（CanCanCan）](#ロールと権限cancancan)
   - [API 設計](#api-設計)
-    - [認証（Devise JWT）](#認証devise-jwt)
-    - [API v1](#api-v1)
-      - [Profile](#profile)
-      - [Tasks](#tasks)
-      - [Users](#users)
-    - [エラーレスポンス](#エラーレスポンス)
-    - [ヘルスチェック](#ヘルスチェック)
   - [技術選定理由](#技術選定理由)
   - [ローカル環境でのセットアップ](#ローカル環境でのセットアップ)
     - [前提](#前提)
@@ -38,214 +31,35 @@ URL: https://portfolio-frontend-self-psi.vercel.app/ <br>
 
 ---
 
-### 使用技術
+## 使用技術
 
-フロントエンドの [使用技術](https://github.com/init-tshirai/portfolio-frontend/#%E4%BD%BF%E7%94%A8%E6%8A%80%E8%A1%93) をご参照ください。
+[使用技術](https://github.com/init-tshirai/portfolio-frontend/#%E4%BD%BF%E7%94%A8%E6%8A%80%E8%A1%93)
 
 ---
 
-## アーキテクチャ
+## インフラ構成
 
-本番環境ではAPIサーバーとDBサーバーを分離して運用しています。
+[インフラ構成](https://github.com/init-tshirai/portfolio-backend/docs/infrastructure_architecture.md)
 
-```mermaid
-flowchart LR
-  subgraph Client["クライアント"]
-    Browser["ブラウザ"]
-  end
+## 認証・認可について
 
-  subgraph Frontend["Vercel"]
-    Next["Next.js"]
-  end
-
-  subgraph APIServer["API サーバー（Render）"]
-    Rails["Rails API\n(本リポジトリ)"]
-  end
-
-  subgraph DBServer["DB サーバー（Supabase）"]
-    DB[(PostgreSQL)]
-  end
-
-  Browser --> Next
-  Next -->|"Bearer JWT"| Rails
-  Rails --> DB
-```
-
-### 認証・認可の流れ
-
-1. ユーザーがフロントの /login からログインする
-2. フロントがPOSTで /auth/sign_in を呼び、JWTをCookieに保存する
-3. 以降はCookieからトークンを取り出し、 Authorization: Bearer <token> 付きでAPIを呼ぶ
-4. API側はDevise JWTで認証、CanCanCanで認可する
+[認証・認可について](https://github.com/init-tshirai/portfolio-backend/docs/auth.md)
 
 ---
 
 ## ER 図
 
-```mermaid
-erDiagram
-  users ||--o{ tasks : "担当"
-  users ||--o{ comments : "投稿"
-  tasks ||--o{ comments : "コメント"
-
-  users {
-    bigint id PK
-    string email UK
-    string encrypted_password
-    string name
-    integer role "normal/admin/viewer"
-    string jti UK
-    datetime created_at
-    datetime updated_at
-  }
-
-  tasks {
-    bigint id PK
-    string title
-    text description
-    integer status "enum"
-    datetime due_date
-    bigint user_id FK
-    datetime created_at
-    datetime updated_at
-  }
-
-  comments {
-    bigint id PK
-    text content
-    string task_update_info
-    bigint task_id FK
-    bigint user_id FK
-    datetime created_at
-    datetime updated_at
-  }
-```
-
-### ロールと権限（CanCanCan）
-
-| role     | 権限            |
-| -------- | ------------- |
-| `normal` | `Task` の CRUD |
-| `admin`  | すべてのリソースを管理   |
-| `viewer` | `Task` の閲覧のみ  |
+[ER図](https://github.com/init-tshirai/portfolio-backend/docs/entity_relationship_diagram.md)
 
 ---
 
 ## API 設計
 
-
-### 認証（Devise JWT）
-
-| メソッド     | パス               | 説明                                           |
-| -------- | ---------------- | -------------------------------------------- |
-| `POST`   | `/auth/sign_in`  | ログイン。レスポンスヘッダー `Authorization: Bearer <JWT>` |
-| `DELETE` | `/auth/sign_out` | ログアウト（JWT 失効）                                |
-
-
-**リクエスト例（sign_in）**
-
-```json
-{
-  "user": {
-    "email": "normal@example.com",
-    "password": "password"
-  }
-}
-```
-
-### API v1
-
-#### Profile
-
-| メソッド  | パス                | 説明            |
-| ----- | ----------------- | ------------- |
-| `GET` | `/api/v1/profile` | ログインユーザー情報と権限 |
-
-
-**レスポンス例**
-
-```json
-{
-  "id": 1,
-  "name": "Normal User",
-  "role": "normal",
-  "permissions": {
-    "tasks": {
-      "read": true,
-      "create": true,
-      "update": true,
-      "destroy": true
-    }
-  }
-}
-```
-
-#### Tasks
-
-| メソッド     | パス                  | 説明              |
-| -------- | ------------------- | --------------- |
-| `GET`    | `/api/v1/tasks`     | 一覧（検索・ページネーション） |
-| `POST`   | `/api/v1/tasks`     | 作成              |
-| `GET`    | `/api/v1/tasks/:id` | 詳細（コメント含む）      |
-| `PATCH`  | `/api/v1/tasks/:id` | 更新（コメント付き履歴）    |
-| `DELETE` | `/api/v1/tasks/:id` | 削除              |
-
-**一覧クエリパラメータ**
-
-| パラメータ           | 説明                    |
-| --------------- | --------------------- |
-| `title`         | タイトル部分一致              |
-| `status`        | ステータス                 |
-| `due_date_from` | 期日 From  |
-| `due_date_to`   | 期日 To                 |
-| `user_id`       | 担当者 ID                |
-| `page`          | ページ番号（デフォルト: 1）       |
-| `limit`         | 件数（デフォルト: 20、最大: 100） |
-
-
-**ページネーション（レスポンスヘッダー）**
-
-bodyはタスク配列のみ。メタ情報はheaderで返します。
-
-
-| ヘッダー             | 説明         |
-| ---------------- | ---------- |
-| `X-Total-Count`  | 総件数        |
-| `X-Current-Page` | 現在ページ      |
-| `X-Per-Page`     | 1 ページあたり件数 |
-| `X-Total-Pages`  | 総ページ数      |
-
-
-#### Users
-
-
-| メソッド  | パス                      | 説明                 |
-| ----- | ----------------------- | ------------------ |
-| `GET` | `/api/v1/users/options` | 担当者セレクト用（id, name） |
-
-
-### エラーレスポンス
-
-
-| HTTP  | 内容                                  |
-| ----- | ----------------------------------- |
-| `401` | 未認証                                 |
-| `403` | 権限不足 `{ "error": "アクセス権限がありません。" }` |
-| `422` | バリデーションエラー `{ "errors": ["..."] }`  |
-
-
-### ヘルスチェック
-
-
-| メソッド  | パス    | 説明           |
-| ----- | ----- | ------------ |
-| `GET` | `/up` | アプリケーション死活監視 |
-
+[API設計](https://github.com/init-tshirai/portfolio-backend/docs/api_design.md)
 
 ---
 
 ## 技術選定理由
-
 
 | 技術 | 選定理由 |
 | ----------------------- | ---------------------------------------------------------------------- |
@@ -253,7 +67,6 @@ bodyはタスク配列のみ。メタ情報はheaderで返します。
 | **PostgreSQL**            | 実務でも多く利用される定番のRDB。RenderやSupabaseといったDBのホスティングサービスと相性が良く、サイトの外部公開が容易。 |
 | **Devise + devise-jwt**   | APIとして利用するため、将来的にスケールできるようJWTを選択。（認証の失効はjtiで実現。） |
 | **CanCanCan**             | ロールごとの認可をシンプルに記述可能 |
-
 
 ---
 
@@ -314,5 +127,4 @@ $ bundle exec rspec
 
 ## 最後に
 
-フロントエンドの [「最後に」](https://github.com/init-tshirai/portfolio-frontend/#%E6%9C%80%E5%BE%8C%E3%81%AB)
- を参照してください。
+[「最後に」](https://github.com/init-tshirai/portfolio-frontend/#%E6%9C%80%E5%BE%8C%E3%81%AB)
