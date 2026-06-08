@@ -57,6 +57,57 @@
 
 - JWT 認証を httpOnly Cookie 経由で扱い、Server Component から安全に API を呼び出す構成としたこと。
 - CanCanCan によるロールベースの認可と、画面・API 双方での権限チェックを行っていること。
+
+  Rails の gem である CanCanCan で、ロールベースの認可を `Ability` クラスに集約しました。`admin` / `normal` / `viewer` ごとの権限が1ファイルで把握でき、変更もしやすくなっています。
+
+  ```ruby
+  class Ability
+    include CanCan::Ability
+
+    def initialize(user)
+      return if user.blank?
+      send("#{user.role}_abilities", user)
+    end
+
+    def admin_abilities(user)
+      can :manage, :all
+    end
+
+    def normal_abilities(user)
+      can :manage, Task
+    end
+
+    def viewer_abilities(user)
+      can :read, Task
+    end
+  end
+  ```
+
+  さらに、権限チェックのタイミングを二段構えにしています。
+
+  - **API リクエスト時**
+    `TasksController` では `load_and_authorize_resource` により、タスク操作のたびに認可を行います。フロント側の表示をすり抜けても、API 側で拒否されます。
+  - **画面表示・画面遷移時**
+    `GET /api/v1/profile` でログインユーザー情報と `permissions` を取得し、Server Component 側で権限を確認します。`permissions` は `Ability` の定義を `can?` で評価した結果なので、API と画面で同じ権限定義を参照しています。
+
+  ```ts
+  export type CurrentUser = {
+    id: number
+    name: string
+    role: "normal" | "admin" | "viewer"
+    permissions: {
+      tasks: {
+        read: boolean
+        create: boolean
+        update: boolean
+        destroy: boolean
+      }
+    }
+  }
+  ```
+
+  権限のない画面へは `/forbidden` へリダイレクトし、新規作成・編集・削除の UI も `permissions` に応じて出し分けています。
+
 - Vercel + Render を利用し、デプロイを自動化したこと。
 
 ---
