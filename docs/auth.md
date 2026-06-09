@@ -1,14 +1,17 @@
 ## 認証・認可について
 
-### 流れ
+### 認証の流れ
 
-1. ユーザーがフロントの `/login` からログインする
-2. Next.js の Route Handler（`POST /api/auth/login`）が `POST /auth/sign_in` を呼び、返却された JWT を httpOnly Cookie（`access_token`）に保存する
-3. 以降、Server Component が Cookie からトークンを取り出し、`Authorization: Bearer <token>` 付きで API をサーバー側から呼ぶ
-4. API 側は Devise JWT で認証、CanCanCan で認可する
-5. ログアウト時は `DELETE /api/auth/logout` 経由で `DELETE /auth/sign_out` を呼び、Cookie を削除する
+1. `/login` でメール・パスワードを送信
+2. `POST /api/auth/login`（Next.js Route Handler）が Rails の `POST /auth/sign_in` を呼ぶ
+3. 返却された JWT を **httpOnly Cookie**（`access_token`）に保存
+4. 以降、Server Component が Cookie からトークンを読み、Rails API をサーバー側で呼び出す
+5. ログアウト時は `DELETE /api/auth/logout` 経由で Rails の `sign_out` を呼び、Cookie を削除
+6. API 側は Devise JWT で認証、CanCanCan で認可する
 
 #### 全体の流れ（シーケンス図）
+
+JWT はブラウザの JavaScript から読めない httpOnly Cookie に保存し、業務 API の呼び出しは Server Component がサーバー側で行う構成です。
 
 ```mermaid
 sequenceDiagram
@@ -31,6 +34,12 @@ sequenceDiagram
   Rails-->>SC: タスクデータ
   SC-->>Browser: レンダリング済み HTML
 ```
+
+### 認可（フロントエンド側）
+
+- `GET /api/v1/profile` で権限を取得
+- 画面遷移時、権限が無ければ `/forbidden` にリダイレクト
+- タスクの「新規作成」、「編集」、「削除」リンクは権限に応じて出し分け
 
 ### ロールと権限（CanCanCan）
 
