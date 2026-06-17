@@ -52,6 +52,8 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_PASSWORD: password
 
     services:
       postgres:
@@ -76,6 +78,9 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
+
+      - name: Create database configuration
+        run: cp config/database.yml.sample_postgres config/database.yml
 
       - name: Prepare test database
         run: bin/rails db:test:prepare
